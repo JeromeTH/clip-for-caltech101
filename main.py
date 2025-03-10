@@ -20,6 +20,15 @@ class CLIPEmbeddedCaltech101(Dataset):
     Each entry has one embedding vector and one label. 
     '''
     def __init__(self, root, model_name, load_embeddings = None, download = True):
+        """
+        Initialize the dataset with CLIP embeddings.
+        
+        Args:
+            root (str): Root directory of the dataset
+            model_name (str): Name of the CLIP model to use
+            load_embeddings (str, optional): Path to pre-computed embeddings file
+            download (bool, optional): Whether to download the dataset
+        """
         self.data = datasets.Caltech101(root = root, target_type = "category", download = download)
         self.model, self.preprocess = clip.load(model_name, device=device)
         self.labels = [self.data[i][1] for i in range(len(self.data))]
@@ -68,11 +77,18 @@ class CLIPEmbeddingClassifier(nn.Module):
     '''
     A basic neural network with 3 linear layers for classification. Takes 
     CLIP embeddings as inputs and outputs one of the 101 classes.
+    Requires: The training and inference should be take in embeddings of the 
+    same CLIP model. 
     '''
-    def __init__(self, model_name, class_names):
+    def __init__(self):
+        """
+        Initialize the classifier model.
+        
+        Args:
+            model_name (str): Name of the CLIP model to use
+            class_names (list): List of class names for the classifier
+        """
         super(CLIPEmbeddingClassifier, self).__init__()
-        self.model, self.preprocess = clip.load(model_name, device=device)
-        self.class_names = class_names
         self.layer1 = nn.Linear(512, 256)
         self.layer2 = nn.Linear(256, 256)
         self.layer3 = nn.Linear(256, 101)
@@ -94,15 +110,6 @@ class CLIPEmbeddingClassifier(nn.Module):
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)  # Sets biases to zero
 
-    def predict_image_class(self, image_path):
-        image = Image.open(image_path)
-        image = self.preprocess(image).unsqueeze(0).to(device)
-        with torch.no_grad():
-            image_embedding = self.model.encode_image(image)
-            output = self.forward(image_embedding)
-            predicted_class = torch.argmax(output, 1)
-        return self.class_names[predicted_class]
-    
 
 def train(model, train_dataloader, n_epochs=100):
     '''
@@ -142,6 +149,21 @@ def evaluate(model, test_dataloader):
             correct += (predicted == labels).sum().item()
     return correct/total
 
+def predict_image_class(model, clip_model_name, image_path, category_names = None):
+    image = Image.open(image_path)
+    clip_model, preprocess = clip.load(clip_model_name, device=device)
+    preprocessed_image = preprocess(image)
+    with torch.no_grad():
+        #unsqueeze because model expects a batch
+        image_embedding = clip_model.encode_image(preprocessed_image.unsqueeze(0))
+        output = model(image_embedding)
+        predicted_class = torch.argmax(output, 1)
+    
+    if category_names == None: 
+        print(predicted_class)
+    else:
+        print(category_names[predicted_class])
+
 def main():
     #load the dataset
     dataset = CLIPEmbeddedCaltech101(model_name = model_name, 
@@ -156,7 +178,7 @@ def main():
     test_dataloader = DataLoader(test_dataset, batch_size=10, shuffle=True)
 
     #initialize classifier model
-    model = CLIPEmbeddingClassifier(model_name=model_name, class_names=dataset.categories).to(device)
+    model = CLIPEmbeddingClassifier().to(device)
     model = train(model, train_dataloader, n_epochs=20)
 
     #evaluate the training and test accuracy
@@ -164,6 +186,13 @@ def main():
     print(f"Train Accuracy: {train_accuracy}")
     test_accuracy = evaluate(model, test_dataloader)
     print(f"Test Accuracy: {test_accuracy}")
+
+    predict_image_class(
+        model = model,
+        clip_model_name= model_name,
+        image_path="sample.jpg",
+        category_names=dataset.categories
+    )
 
 if __name__ == "__main__":
     main()
