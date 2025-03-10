@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 import clip
-import scipy
 import torch
 from torchvision import *
 from torch.utils.data import Dataset, DataLoader
-import numpy as np
 import torch.optim as optim
 from PIL import Image
 import torch.nn as nn
