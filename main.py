@@ -11,8 +11,6 @@ from PIL import Image
 import torch.nn as nn
 import torch.nn.functional as F
 
-# Verify the download by listing the directory contents.
-# data = datasets.Caltech101(root = "./data", target_type = "category", download = True)
 model_name = "ViT-B/32"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 data_path = "./data"
@@ -147,6 +145,7 @@ def evaluate(model, test_dataloader):
     return correct/total
 
 def main():
+    #load the dataset
     dataset = CLIPEmbeddedCaltech101(model_name = model_name, 
                                      root = data_path,
                                      load_embeddings = 'image_embeddings.pt', 
@@ -158,11 +157,11 @@ def main():
     train_dataloader = DataLoader(train_dataset, batch_size=10, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=10, shuffle=True)
 
-    model = CLIPEmbeddingClassifier(model_name=model_name, class_names=dataset.categories)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print("device = : ", device)
-    model = model.to(device)
+    #initialize classifier model
+    model = CLIPEmbeddingClassifier(model_name=model_name, class_names=dataset.categories).to(device)
     model = train(model, train_dataloader, n_epochs=20)
+
+    #evaluate the training and test accuracy
     train_accuracy = evaluate(model, train_dataloader)
     print(f"Train Accuracy: {train_accuracy}")
     test_accuracy = evaluate(model, test_dataloader)
