@@ -1,0 +1,15 @@
+{"time":"2025-03-10T17:24:30.035011-04:00","level":"INFO","msg":"stream: starting","core version":"0.19.8","symlink path":"/Users/jerometh/Projects/Research/clip-for-caltech101/wandb/run-20250310_172429-u6v0u3sm/logs/debug-core.log"}
+{"time":"2025-03-10T17:24:30.550653-04:00","level":"INFO","msg":"created new stream","id":"u6v0u3sm"}
+{"time":"2025-03-10T17:24:30.550791-04:00","level":"INFO","msg":"stream: started","id":"u6v0u3sm"}
+{"time":"2025-03-10T17:24:30.550826-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"u6v0u3sm"}
+{"time":"2025-03-10T17:24:30.550989-04:00","level":"INFO","msg":"sender: started","stream_id":"u6v0u3sm"}
+{"time":"2025-03-10T17:24:30.550922-04:00","level":"INFO","msg":"handler: started","stream_id":"u6v0u3sm"}
+{"time":"2025-03-10T17:24:31.695377-04:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-03-10T17:24:35.65454-04:00","level":"INFO","msg":"stream: closing","id":"u6v0u3sm"}
+{"time":"2025-03-10T17:24:35.654654-04:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-03-10T17:24:35.656094-04:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-03-10T17:24:37.06487-04:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-03-10T17:24:37.980395-04:00","level":"INFO","msg":"sender: closed","stream_id":"u6v0u3sm"}
+{"time":"2025-03-10T17:24:37.9804-04:00","level":"INFO","msg":"handler: closed","stream_id":"u6v0u3sm"}
+{"time":"2025-03-10T17:24:37.980374-04:00","level":"INFO","msg":"writer: Close: closed","stream_id":"u6v0u3sm"}
+{"time":"2025-03-10T17:24:37.98096-04:00","level":"INFO","msg":"stream: closed","id":"u6v0u3sm"}

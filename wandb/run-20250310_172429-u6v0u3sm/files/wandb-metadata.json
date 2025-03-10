@@ -1,0 +1,44 @@
+{
+  "os": "macOS-13.2.1-arm64-arm-64bit",
+  "python": "CPython 3.12.9",
+  "startedAt": "2025-03-10T21:24:30.032197Z",
+  "program": "/Users/jerometh/Projects/Research/clip-for-caltech101/main.py",
+  "codePath": "main.py",
+  "git": {
+    "remote": "git@github.com:JeromeTH/clip-for-caltech101.git",
+    "commit": "8d236570322cc413054579542f0e965635c8ac3a"
+  },
+  "email": "jthsu20@gmail.com",
+  "root": "/Users/jerometh/Projects/Research/clip-for-caltech101",
+  "host": "Jeromes-MacBook-Pro.local",
+  "executable": "/Users/jerometh/miniforge3/envs/vision/bin/python",
+  "codePathLocal": "main.py",
+  "cpu_count": 10,
+  "cpu_count_logical": 10,
+  "disk": {
+    "/": {
+      "total": "994662584320",
+      "used": "493696356352"
+    },
+    "/System/Volumes/Data": {
+      "total": "994662584320",
+      "used": "493696356352"
+    }
+  },
+  "memory": {
+    "total": "34359738368"
+  },
+  "cpu": {
+    "count": 10,
+    "countLogical": 10
+  },
+  "apple": {
+    "name": "Apple M2 Pro",
+    "ecpuCores": 4,
+    "pcpuCores": 6,
+    "gpuCores": 16,
+    "memoryGb": 32,
+    "swapTotalBytes": "63350767616",
+    "ramTotalBytes": "34359738368"
+  }
+}

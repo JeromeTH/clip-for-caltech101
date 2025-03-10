@@ -8,10 +8,26 @@ import torch.optim as optim
 from PIL import Image
 import torch.nn as nn
 import torch.nn.functional as F
+import wandb
 
 model_name = "ViT-B/32"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 data_path = "./data"
+
+epochs = 20
+learning_rate = 0.01
+
+wandb.login()
+run = wandb.init(
+    # Set the project where this run will be logged
+    project="clip-for-caltech101",
+    # Track hyperparameters and run metadata
+    config={
+        "learning_rate": learning_rate,
+        "epochs": epochs,
+    },
+)
+
 
 class CLIPEmbeddedCaltech101(Dataset):
     '''
@@ -111,15 +127,15 @@ class CLIPEmbeddingClassifier(nn.Module):
                     nn.init.zeros_(m.bias)  # Sets biases to zero
 
 
-def train(model, train_dataloader, n_epochs=100):
+def train(model, train_dataloader):
     '''
     train the model with the given train_dataloader for n_epochs.
     Returns the trained model.
     '''
     model.train()
-    optimizer = optim.SGD(model.parameters(), lr = 0.01)
+    optimizer = optim.SGD(model.parameters(), lr = learning_rate)
     criterion = nn.CrossEntropyLoss()
-    for epoch in range(n_epochs):
+    for epoch in range(epochs):
         running_loss = 0.0
         for inputs, labels in train_dataloader:
             inputs, labels = inputs.to(device), labels.to(device)
@@ -129,7 +145,8 @@ def train(model, train_dataloader, n_epochs=100):
             loss.backward()
             optimizer.step()
             running_loss += loss.item()  # Add the loss value for monitoring
-        print(f"Epoch [{epoch+1}/{n_epochs}], Loss: {running_loss/len(train_dataloader):.4f}")
+        print(f"Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_dataloader):.4f}")
+        wandb.log({"loss": loss})
     return model
 
 def evaluate(model, test_dataloader):
@@ -179,7 +196,7 @@ def main():
 
     #initialize classifier model
     model = CLIPEmbeddingClassifier().to(device)
-    model = train(model, train_dataloader, n_epochs=20)
+    model = train(model, train_dataloader)
 
     #evaluate the training and test accuracy
     train_accuracy = evaluate(model, train_dataloader)
