@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/jerometh/Projects/Research/clip-for-caltech101/main.py", line 215, in <module>
-    main()
-  File "/Users/jerometh/Projects/Research/clip-for-caltech101/main.py", line 199, in main
-    model = train(model, train_dataloader, n_epochs=20)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: train() got an unexpected keyword argument 'n_epochs'
