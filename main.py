@@ -9,12 +9,14 @@ from PIL import Image
 import torch.nn as nn
 import torch.nn.functional as F
 import wandb
+import numpy as np
 import os
 
 LOG_WANDB = False
 model_name = "ViT-B/32"
 device = "cuda" if torch.cuda.is_available() else "cpu"
-data_path = "./data"
+print("running on device: ", device)
+data_path = "."
 
 epochs = 100
 learning_rate = 0.01
@@ -54,6 +56,7 @@ class CLIPEmbeddedCaltech101(Dataset):
        
         #try to load the embeddings from the embeddings_dir if file not found create new ones
         try:
+            print("Loading pre-computed embeddings from: ", load_embeddings)
             self.image_embeddings = torch.load(load_embeddings)
         except:
             print ("Embedding not provided, calculating new embeddings")
@@ -134,6 +137,7 @@ class CLIPEmbeddingClassifier(nn.Module):
         return self.forward(x)
     
     def forward(self, x):
+        x = x.to(dtype=self.layer1.weight.dtype)  # Match model dtype
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         x = self.layer3(x)
@@ -166,7 +170,7 @@ class Trainer:
                                 if self.test_dataloader is not None else 0)
     
     def prepare_model(self, model: nn.Module):
-        self.model = model
+        self.model = model.to(device)
 
     def fit(self, model, data): 
         self.prepare_data(data)
@@ -206,7 +210,7 @@ class Trainer:
 def predict_image_class(model, clip_model_name, image_path, category_names = None):
     image = Image.open(image_path)
     clip_model, preprocess = clip.load(clip_model_name, device=device)
-    preprocessed_image = preprocess(image)
+    preprocessed_image = preprocess(image).to(device)
     with torch.no_grad():
         #unsqueeze because model expects a batch
         image_embedding = clip_model.encode_image(preprocessed_image.unsqueeze(0))
