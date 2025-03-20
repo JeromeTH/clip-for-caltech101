@@ -24,12 +24,13 @@ class CLIPImageClassifier(nn.Module):
     def __init__(self, pretrained, num_classes, device = "cuda" if torch.cuda.is_available() else "cpu"):
         super(CLIPImageClassifier, self).__init__()
         self.pretrained = pretrained
-        self.fc = nn.Linear(self.pretrained.visual.output_dim, num_classes)
         self.device = device
+        self.fc = nn.Linear(self.pretrained.visual.output_dim, num_classes).to(device)
 
     def forward(self, x):
-        x = x.to(self.device)
+        x = x.to(dtype=next(self.pretrained.parameters()).dtype, device=self.device)
         x = self.pretrained.encode_image(x)
+        x = x.to(dtype=next(self.pretrained.parameters()).dtype)
         x = self.fc(x)
         return x
     
@@ -44,10 +45,6 @@ class CLIPImageClassifier(nn.Module):
         return {'optimizer': optimizer,
                 'loss': nn.CrossEntropyLoss()}
 
-
-    
-
-
 def load_caltech101(train_augs, test_augs, batch_size):
     dataset = Caltech101(root='.', target_type = "category", transform= train_augs, download=True)
     #generate random indices to be the training set * 0.8, will split using SubSet later to be the training set 
@@ -60,19 +57,17 @@ def load_caltech101(train_augs, test_augs, batch_size):
     test_dataset.transform = test_augs
     return train_dataset, test_dataset
 
-
 def main():
+    print("Loading dataset...")
     train_dataset, test_dataset = load_caltech101(train_augs, test_augs, batch_size=32)
+    print("Dataset loaded")
+    print("Loading model...")
     model = CLIPImageClassifier(pretrained, num_classes=101)
-    # print(model.named_parameters())
-    # for name, param in model.named_parameters():
-    #     print(name, param.requires_grad)
-    print(preprocess.__str__())
-    print(train_dataset.__getitem__(0))
-    # data = DataModule(train_dataset, test_dataset, batch_size=32)
-    # trainer = Trainer(max_epochs=10, device=model.device)
-    # trainer.fit(model, data)
-    # trainer.evaluate()
+    print("Model loaded")
+    data = DataModule(train_dataset, test_dataset, batch_size=32)
+    trainer = Trainer(max_epochs=20, device=model.device)
+    trainer.fit(model, data)
+    trainer.evaluate()
 
 if __name__ == "__main__":
     main() 
