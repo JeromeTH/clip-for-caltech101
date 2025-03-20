@@ -2,3 +2,4 @@
 *.pt
 /wandb/
 /caltech101/
+/__pycache__/

@@ -11,6 +11,7 @@ import torch.nn.functional as F
 import wandb
 import numpy as np
 import os
+from lightning import Trainer, DataModule
 
 LOG_WANDB = False
 model_name = "ViT-B/32"
@@ -95,23 +96,6 @@ class CLIPEmbeddedCaltech101(Dataset):
     def categories(self):
         return self.data.categories
 
-class DataModule:
-    def __init__(self, dataset: Dataset, batch_size: int, train_test_split = 0.8):
-        self.batch_size = batch_size
-        self.train_dataset, self.test_dataset = torch.utils.data.random_split(dataset, [train_test_split, 1 - train_test_split])
-    
-    def _get_dataloader(self, train = True, shuffle = True):
-        
-        data = self.train_dataset if train else self.test_dataset
-        return DataLoader(data, batch_size = self.batch_size, shuffle = shuffle)
-    
-    def train_dataloader(self):
-        return self._get_dataloader(train = True)
-    
-    def test_dataloader(self):
-        return self._get_dataloader(train = False)
-    
-
 class CLIPEmbeddingClassifier(nn.Module):
     '''
     A basic neural network with 3 linear layers for classification. Takes 
@@ -154,58 +138,6 @@ class CLIPEmbeddingClassifier(nn.Module):
         return {'optimizer': optim.SGD(self.parameters(), lr = learning_rate),
                 'loss': nn.CrossEntropyLoss()}
 
-class Trainer:
-    '''
-    The base class for training models with data
-    '''
-    def __init__(self, max_epochs, num_gpus = 0):
-        self.max_epochs = max_epochs
-        self.num_gpus = num_gpus
-
-    def prepare_data(self, data: DataModule):
-        self.train_dataloader = data.train_dataloader()
-        self.test_dataloader = data.test_dataloader()
-        self.num_train_batches = len(self.train_dataloader)
-        self.num_test_batches = (len(self.test_dataloader)
-                                if self.test_dataloader is not None else 0)
-    
-    def prepare_model(self, model: nn.Module):
-        self.model = model.to(device)
-
-    def fit(self, model, data): 
-        self.prepare_data(data)
-        self.prepare_model(model)
-        self.model.train()
-        self.optim = self.model.configure_optimizers()
-        self.epoch = 0
-        for self.epoch in range(self.max_epochs):
-            self.fit_epoch()
-
-    def fit_epoch(self):
-        running_loss = 0.0
-        for inputs, labels in self.train_dataloader:
-            inputs, labels = inputs.to(device), labels.to(device)
-            self.optim["optimizer"].zero_grad()
-            output = self.model(inputs)
-            loss = self.optim["loss"](output, labels)
-            loss.backward()
-            self.optim["optimizer"].step()
-            running_loss += loss.item()  # Add the loss value for monitoring
-        print(f"Epoch [{self.epoch+1}/{self.max_epochs}], Loss: {running_loss/len(self.train_dataloader):.4f}")
-        if LOG_WANDB: wandb.log({"loss": loss})
-
-    def evaluate(self):
-        self.model.eval()
-        correct = 0
-        total = 0
-        with torch.no_grad():
-            for inputs, labels in self.test_dataloader:
-                inputs, labels = inputs.to(device), labels.to(device)
-                outputs = self.model(inputs)
-                predicted = torch.argmax(outputs, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-        print(f"Accuracy: {correct/total}")
 
 def predict_image_class(model, clip_model_name, image_path, category_names = None):
     image = Image.open(image_path)
@@ -229,9 +161,10 @@ def main():
                                      load_embeddings = 'image_embeddings.pt', 
                                      download = True)
     
+    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
+    data = DataModule(train_dataset, test_dataset, batch_size = 32)
     model = CLIPEmbeddingClassifier()
-    data = DataModule(dataset, batch_size = 32)
-    trainer = Trainer(epochs)
+    trainer = Trainer(epochs, device)
     trainer.fit(model, data)
     trainer.evaluate()
 
